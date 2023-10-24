@@ -1,13 +1,13 @@
 #!/usr/bin/python3
-class Node():
-    '''Describes a node
-        Args:
-        data (int): Integer representing the data for the node
-        next_node (Node): Represents the next node in the list
-    '''
+class Node:
+
     def __init__(self, data, next_node=None):
-        self.data = data
-        self.next_node = next_node
+        if not isinstance(data, int):
+            raise TypeError("data must be an integer")
+        self.__data = data
+        if next_node is not None and not isinstance(next_node, Node):
+            raise TypeError("next_node must be a Node object")
+        self.__next_node = next_node
 
     @property
     def data(self):
@@ -15,9 +15,6 @@ class Node():
 
     @data.setter
     def data(self, value):
-        '''
-         Updates the value for the data
-        '''
         if not isinstance(value, int):
             raise TypeError("data must be an integer")
         self.__data = value
@@ -32,46 +29,38 @@ class Node():
             raise TypeError("next_node must be a Node object")
         self.__next_node = value
 
+    def __str__(self):
+        return str(self.__data)
 
-class SinglyLinkedList():
-    '''
-        Inserts a node into a liked list
-    '''
+
+class SinglyLinkedList:
+
     def __init__(self):
         self.__head = None
 
     def sorted_insert(self, value):
-        '''
-            Inserts the nodes in a sorted fashion in increasing order
-            Args:
-                Value (int): The value of the node
-        '''
-        node = Node(value)
-        tmp = self.__head
-        # Checks if the head is None to then add the first node.
-        if self.__head is None:
-            self.__head = node
-            return
-        # Checks if the first node is less than the new node.
-        if node.data < tmp.data:
-            node.next_node = tmp
-            self.__head = node
-            return
-        # Iterates and checks if the next node is more or less than new node.
-        while tmp.next_node is not None:
-            if tmp.next_node.data < node.data:
-                tmp = tmp.next_node
-            else:
-                node.next_node = tmp.next_node
-                tmp.next_node = node
-                return
-        tmp.next_node = node
-
-    def __str__(self):
+        if not isinstance(value, int):
+            raise TypeError("data must be an integer")
         tmp = self.__head
         if tmp is None:
-            return ("")
-        while tmp.next_node is not None and tmp:
-            print(tmp.data)
+            self.__head = Node(value)
+        elif tmp.data > value:
+            new = Node(value, tmp)
+            self.__head = new
+        else:
+            while tmp.next_node is not None:
+                if tmp.next_node.data > value:
+                    break
+                tmp = tmp.next_node
+            new = Node(value, tmp.next_node)
+            tmp.next_node = new
+
+    def __str__(self):
+        string = ''
+        if self.__head is None:
+            return string
+        tmp = self.__head
+        while tmp is not None:
+            string += str(tmp.data) + '\n'
             tmp = tmp.next_node
-        return (str(tmp.data))
+        return string[:-1]
