@@ -1,58 +1,55 @@
 #!/usr/bin/python3
-"""Reads from standard input and computes metrics.
-
-After every ten lines or the input of a keyboard interruption (CTRL + C),
-prints the following statistics:
-    - Total file size up to that point.
-    - Count of read status codes up to that point.
+"""
+A script that reads stdin line by line and computes metrics
 """
 
+import sys
 
-def print_stats(size, status_codes):
-    """Print accumulated metrics.
 
-    Args:
-        size (int): The accumulated read file size.
-        status_codes (dict): The accumulated count of status codes.
+def compute_metrics():
     """
-    print("File size: {}".format(size))
-    for key in sorted(status_codes):
-        print("{}: {}".format(key, status_codes[key]))
+    Read data from stdin, compute and print metrics.
 
-if __name__ == "__main__":
-    import sys
+    Metrics include:
+    - Total file size
+    - Number of lines by status code (sorted in ascending order)
 
-    size = 0
-    status_codes = {}
-    valid_codes = ['200', '301', '400', '401', '403', '404', '405', '500']
-    count = 0
+    Input format expected: <IP Address> - [<date>] "GET /projects/260 HTTP/1.1" <status code> <file size>
+
+    The script continues reading from stdin and computes metrics every 10 lines or upon a keyboard interruption (CTRL + C).
+
+    This script does not handle file permission or file not existing exceptions.
+    """
+    total_size = 0
+    status_codes = {"200": 0, "301": 0, "400": 0, "401": 0, "403": 0, "404": 0, "405": 0, "500": 0}
+
+    line_count = 0
 
     try:
         for line in sys.stdin:
-            if count == 10:
-                print_stats(size, status_codes)
-                count = 1
-            else:
-                count += 1
+            line_count += 1
+            data = line.split()
+            if len(data) > 6:
+                file_size = int(data[-1])
+                status_code = data[-2]
 
-            line = line.split()
+                total_size += file_size
 
-            try:
-                size += int(line[-1])
-            except (IndexError, ValueError):
-                pass
+                if status_code in status_codes:
+                    status_codes[status_code] += 1
 
-            try:
-                if line[-2] in valid_codes:
-                    if status_codes.get(line[-2], -1) == -1:
-                        status_codes[line[-2]] = 1
-                    else:
-                        status_codes[line[-2]] += 1
-            except IndexError:
-                pass
-
-        print_stats(size, status_codes)
-
+            if line_count % 10 == 0:
+                print("File size: {}".format(total_size))
+                for code, count in sorted(status_codes.items()):
+                    if count > 0:
+                        print("{}: {}".format(code, count))
     except KeyboardInterrupt:
-        print_stats(size, status_codes)
-        raise
+        pass
+    finally:
+        print("File size: {}".format(total_size))
+        for code, count in sorted(status_codes.items()):
+            if count > 0:
+                print("{}: {}".format(code, count))
+
+if __name__ == "__main__":
+    compute_metrics()
