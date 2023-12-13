@@ -1,1 +1,1 @@
-repository for python language
+repo for higher python and sql programming
